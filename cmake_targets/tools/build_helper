@@ -273,15 +273,15 @@ install_protobuf_from_source(){
       ./configure
       make -j`nproc`
       make install
+      ldconfig
     fi
     ) >& $protobuf_install_log
-    return 0
 }
 
 install_protobuf_c_from_source(){
     protobuf_c_install_log=$OPENAIR_DIR/cmake_targets/log/protobuf_c_install_log.txt
     echo_info "\nInstalling Google Protobuf_C from sources. The log file for Protobuf_C installation is here: $protobuf_c_install_log "
-    #(
+    (
     if [[ "$OS_DISTRO" == "rhel" ]] || [[ "$OS_DISTRO" == "centos" ]]; then
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
     fi
@@ -297,8 +297,7 @@ install_protobuf_c_from_source(){
     make -j`nproc`
     $SUDO make install
     $SUDO ldconfig
-    #) >& $protobuf_c_install_log
-    return 0
+    ) >& $protobuf_c_install_log
 }
 
 install_usrp_uhd_driver_from_source(){
@@ -824,7 +823,6 @@ install_asn1c_from_source(){
     cd -
     $SUDO ldconfig
     ) > $asn1_install_log 2>&1
-    return 0
 }
 
 #################################################
