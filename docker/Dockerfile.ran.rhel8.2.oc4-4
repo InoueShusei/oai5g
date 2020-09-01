@@ -70,6 +70,6 @@ RUN /bin/sh oaienv && \
     mkdir -p log && \
     ./build_oai -I 
 
-#as the image is public, we need to remove the subscription manager configurations
-#RUN rm -Rf /etc/rhsm /etc/pki/entitlement
+#as the image is public, we need to remove the subscription certificates
+RUN rm -Rf /etc/pki/entitlement/*.pem
 

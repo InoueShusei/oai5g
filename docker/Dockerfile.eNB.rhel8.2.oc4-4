@@ -28,8 +28,7 @@
 FROM image-registry.openshift-image-registry.svc:5000/oaicicd-ran-tmp/oai-ran:tmp-rhel8-latest AS enb-build 
 
 
-WORKDIR /oai-enb
-COPY . .
+WORKDIR /oai-ran
 
 #run build_oai to build the target image
 RUN /bin/sh oaienv && \ 
@@ -37,7 +36,7 @@ RUN /bin/sh oaienv && \
     mkdir -p log && \
     ./build_oai --eNB --ninja
 
-RUN ldconfig -v && ldd /oai-enb/targets/bin/lte-softmodem.Rel15
+RUN ldconfig -v && ldd /oai-ran/targets/bin/lte-softmodem.Rel15
 
 #start from scratch for target executable
 FROM registry.access.redhat.com/ubi8/ubi:latest as oai-enb
@@ -65,7 +64,7 @@ RUN rm /etc/rhsm-host && \
 
 
 WORKDIR /opt/oai-enb/bin
-COPY --from=enb-build /oai-enb/targets/bin/lte-softmodem.Rel15 .
+COPY --from=enb-build /oai-ran/targets/bin/lte-softmodem.Rel15 .
 
 RUN ldconfig -v && ldd lte-softmodem.Rel15
 
