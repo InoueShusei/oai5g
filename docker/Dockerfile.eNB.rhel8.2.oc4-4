@@ -70,7 +70,7 @@ RUN /bin/bash -c "ln -s /usr/local/lib/librfsimulator.so.Rel15 /usr/local/lib/li
 
 COPY --from=enb-build /usr/local/lib/libprotobuf-c.so.1 .
 
-RUN ldconfig -v && ldd lte-softmodem.Rel15
+RUN ldconfig -v && ldd /opt/oai-enb/bin/lte-softmodem.Rel15
 
 # Copy the relevant configuration files for eNB
 WORKDIR /opt/oai-enb/etc
