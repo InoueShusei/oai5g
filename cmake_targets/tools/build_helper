@@ -281,7 +281,7 @@ install_protobuf_from_source(){
 install_protobuf_c_from_source(){
     protobuf_c_install_log=$OPENAIR_DIR/cmake_targets/log/protobuf_c_install_log.txt
     echo_info "\nInstalling Google Protobuf_C from sources. The log file for Protobuf_C installation is here: $protobuf_c_install_log "
-    (
+    #(
     if [[ "$OS_DISTRO" == "rhel" ]] || [[ "$OS_DISTRO" == "centos" ]]; then
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
     fi
@@ -297,7 +297,7 @@ install_protobuf_c_from_source(){
     make -j`nproc`
     $SUDO make install
     $SUDO ldconfig
-    ) >& $protobuf_c_install_log
+    #) >& $protobuf_c_install_log
     return 0
 }
 
