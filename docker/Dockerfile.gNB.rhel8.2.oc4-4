@@ -36,7 +36,10 @@ RUN /bin/sh oaienv && \
     mkdir -p log && \
     ./build_oai --gNB --ninja
 
+#debug
 RUN ldconfig -v && ldd /oai-ran/targets/bin/nr-softmodem.Rel15
+RUN ls /oai-ran/targets/bin
+RUN ls /oai-ran/cmake_targets/ran_build/build/*.so
 
 #start from scratch for target executable
 FROM registry.access.redhat.com/ubi8/ubi:latest as oai-gnb
@@ -47,8 +50,6 @@ RUN yum repolist --disablerepo=* && \
         libXpm \
         libX11 \
         atlas \
-        blas \
-        lapack \
         lksctp-tools \
         nettle \
         libyaml && \
@@ -74,6 +75,9 @@ COPY --from=gnb-build /usr/local/lib/libprotobuf-c.so.1 .
 
 WORKDIR /lib64
 COPY --from=gnb-build /lib64/libforms.so.2 .
+COPY --from=gnb-build /lib64/libblas.so.3 .
+COPY --from=gnb-build /lib64/liblapack.so.3 .
+COPY --from=gnb-build /lib64/liblapacke.so.3 .
 
 RUN ldconfig -v && ldd /opt/oai-gnb/bin/nr-softmodem.Rel15
 

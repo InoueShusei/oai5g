@@ -36,7 +36,10 @@ RUN /bin/sh oaienv && \
     mkdir -p log && \
     ./build_oai --eNB --ninja
 
+# debug
 RUN ldconfig -v && ldd /oai-ran/targets/bin/lte-softmodem.Rel15
+RUN ls /oai-ran/targets/bin
+RUN ls /oai-ran/cmake_targets/ran_build/build/*.so
 
 #start from scratch for target executable
 FROM registry.access.redhat.com/ubi8/ubi:latest as oai-enb
@@ -58,7 +61,7 @@ COPY --from=enb-build /oai-ran/targets/bin/librfsimulator.so.Rel15 .
 #COPY --from=enb-build /oai-ran/targets/bin/liboai_usrpdevif.so.Rel15 .
 COPY --from=enb-build /oai-ran/targets/bin/libcoding.so .
 COPY --from=enb-build /oai-ran/targets/bin/libparams_libconfig.so .
-COPY --from=enb-build /oai-ran/cmake_targets/ran_build/build/libSIMU.so .
+#COPY --from=enb-build /oai-ran/cmake_targets/ran_build/build/libSIMU.so .
 COPY --from=enb-build /oai-ran/cmake_targets/ran_build/build/libdfts.so .
 COPY --from=enb-build /oai-ran/cmake_targets/ran_build/build/liboai_iqplayer.so .
 RUN /bin/bash -c "ln -s /usr/local/lib/liboai_eth_transpro.so.Rel15 /usr/local/lib/liboai_transpro.so"
