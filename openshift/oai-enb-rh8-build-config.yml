@@ -37,6 +37,11 @@ spec:
         #using both builder image and target image docker
         dockerStrategy:
             dockerfilePath: "docker/Dockerfile.eNB.rhel8.2.oc4-4"
+    nodeSelector:
+        kubernetes.io/hostname: dedale.5glab.nsa.eurecom.fr
+    resources:
+        requests:
+            ephemeral-storage: "8Gi"
     output:
         to:
             kind: "ImageStreamTag"
