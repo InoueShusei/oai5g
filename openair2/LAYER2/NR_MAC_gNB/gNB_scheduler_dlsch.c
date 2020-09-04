@@ -494,17 +494,6 @@ void nr_schedule_ue_spec(module_id_t module_id,
 
     //ue_sched_ctl->uplane_inactivity_timer = 0;
   }
-  else {
-    LOG_I(MAC, "Configuring DL_TX in %d.%d: random data\n", frame, slot);
-    // fill dlsch_buffer with random data
-    for (int i = 0; i < TBS_bytes; i++)
-      mac_sdus[i] = (unsigned char) (lrand48()&0xff);
-    sdu_lcids[0] = 0x3f; // DRB
-    sdu_lengths[0] = TBS_bytes - ta_len - 3;
-    header_length_total += 2 + (sdu_lengths[0] >= 128);
-    sdu_length_total += sdu_lengths[0];
-    num_sdus +=1;
-  }
 
   // there is at least one SDU or TA command
   // if (num_sdus > 0 ){
