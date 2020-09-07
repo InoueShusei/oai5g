@@ -262,7 +262,7 @@ int8_t nr_ue_decode_mib(module_id_t module_id,
                         void *pduP,
                         uint16_t cell_id)
 {
-  LOG_I(MAC,"[L2][MAC] decode mib\n");
+  //LOG_I(MAC,"[L2][MAC] decode mib\n");
 
   NR_UE_MAC_INST_t *mac = get_mac_inst(module_id);
 
@@ -369,7 +369,7 @@ int8_t nr_ue_decode_mib(module_id_t module_id,
       num_rbs     = table_38213_13_4_c2[index_4msb];
       num_symbols = table_38213_13_4_c3[index_4msb];
       rb_offset   = table_38213_13_4_c4[index_4msb];
-      LOG_I(MAC,"<<<<<<<<<index_4msb %d num_rbs %d num_symb %d rb_offset %d\n",index_4msb,num_rbs,num_symbols,rb_offset );
+      //LOG_I(MAC,"<<<<<<<<<index_4msb %d num_rbs %d num_symb %d rb_offset %d\n",index_4msb,num_rbs,num_symbols,rb_offset );
     }else if(min_channel_bw & bw_40MHz){
       AssertFatal(index_4msb < 10, "38.213 Table 13-6 4 MSB out of range\n");
       mac->type0_pdcch_ss_mux_pattern = 1;
@@ -3997,7 +3997,7 @@ nr_ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 
   rlc_buffer_occupancy_t lcid_buffer_occupancy_old =
     0, lcid_buffer_occupancy_new = 0;
-  LOG_D(MAC,
+  LOG_I(MAC,
         "[UE %d] MAC PROCESS UL TRANSPORT BLOCK at frame%d subframe %d TBS=%d\n",
         module_idP, frameP, subframe, buflen);
   AssertFatal(CC_id == 0,

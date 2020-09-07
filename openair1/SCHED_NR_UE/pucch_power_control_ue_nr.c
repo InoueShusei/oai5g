@@ -98,7 +98,7 @@ int16_t get_pucch_tx_power_ue(PHY_VARS_NR_UE *ue,
   }
   else {
     G_b_f_c = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][gNB_id][0]->g_pucch;
-    LOG_W(PHY,"PUCCH Transmit power control command not yet implemented for NR : at line %d in function %s of file %s \n", LINE_FILE , __func__, __FILE__);
+    //LOG_W(PHY,"PUCCH Transmit power control command not yet implemented for NR : at line %d in function %s of file %s \n", LINE_FILE , __func__, __FILE__);
     return (PUCCH_POWER_DEFAULT);
   }
 
