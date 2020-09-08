@@ -445,6 +445,8 @@ void nr_schedule_ue_spec(module_id_t module_id,
         slot,
         lcid,
         rlc_status.bytes_in_buffer);
+  if (rlc_status.bytes_in_buffer == 0)
+    return;
 
   /* PREPROCESSOR */
   /* BWP */
@@ -537,62 +539,46 @@ void nr_schedule_ue_spec(module_id_t module_id,
   uint16_t sdu_lengths[NB_RB_MAX] = {0};
   uint8_t mac_sdus[MAX_NR_DLSCH_PAYLOAD_BYTES];
   unsigned char sdu_lcids[NB_RB_MAX] = {0};
-  if (rlc_status.bytes_in_buffer > 0) {
-    LOG_D(MAC,
-          "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting "
-          "%d bytes from RLC (lcid %d total hdr len %d), TBS: %d \n \n",
-          module_id,
-          frame,
-          TBS - ta_len - header_length_total - sdu_length_total - 3,
-          lcid,
-          header_length_total,
-          TBS);
-
-    sdu_lengths[num_sdus] = mac_rlc_data_req(module_id,
-        rnti,
+  LOG_D(MAC,
+        "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting "
+        "%d bytes from RLC (lcid %d total hdr len %d), TBS: %d \n \n",
         module_id,
         frame,
-        ENB_FLAG_YES,
-        MBMS_FLAG_NO,
-        lcid,
         TBS - ta_len - header_length_total - sdu_length_total - 3,
-        (char *)&mac_sdus[sdu_length_total],
-        0,
-        0);
+        lcid,
+        header_length_total,
+        TBS);
 
-    LOG_I(MAC,
-          "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n",
-          module_id,
-          sdu_lengths[num_sdus],
-          lcid);
+  sdu_lengths[num_sdus] = mac_rlc_data_req(module_id,
+      rnti,
+      module_id,
+      frame,
+      ENB_FLAG_YES,
+      MBMS_FLAG_NO,
+      lcid,
+      TBS - ta_len - header_length_total - sdu_length_total - 3,
+      (char *)&mac_sdus[sdu_length_total],
+      0,
+      0);
 
-    sdu_lcids[num_sdus] = lcid;
-    sdu_length_total += sdu_lengths[num_sdus];
-    header_length_last = 1 + 1 + (sdu_lengths[num_sdus] >= 128);
-    header_length_total += header_length_last;
+  LOG_I(MAC,
+        "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n",
+        module_id,
+        sdu_lengths[num_sdus],
+        lcid);
 
-    num_sdus++;
+  sdu_lcids[num_sdus] = lcid;
+  sdu_length_total += sdu_lengths[num_sdus];
+  header_length_last = 1 + 1 + (sdu_lengths[num_sdus] >= 128);
+  header_length_total += header_length_last;
 
-    //ue_sched_ctl->uplane_inactivity_timer = 0;
-  }
-  else {
-    LOG_I(MAC, "Configuring DL_TX in %d.%d: random data\n", frame, slot);
-    // fill dlsch_buffer with random data
-    for (int i = 0; i < TBS; i++)
-      mac_sdus[i] = (unsigned char) (lrand48()&0xff);
-    sdu_lcids[0] = 0x3f; // DRB
-    sdu_lengths[0] = TBS - ta_len - 3;
-    header_length_total += 2 + (sdu_lengths[0] >= 128);
-    sdu_length_total += sdu_lengths[0];
-    num_sdus +=1;
-  }
+  num_sdus++;
+
+  //ue_sched_ctl->uplane_inactivity_timer = 0;
 
   // there is at least one SDU or TA command
-  // if (num_sdus > 0 ){
-  if (ta_len + sdu_length_total + header_length_total == 0) {
-    // There is no data from RLC or MAC header, so don't schedule
-    return;
-  }
+  AssertFatal(ta_len + sdu_length_total + header_length_total > 0,
+              "no SDU data although UE is scheduled\n");
 
   // Check if there is data from RLC or CE
   const int post_padding = TBS >= 2 + header_length_total + sdu_length_total + ta_len;
