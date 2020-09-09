@@ -1185,9 +1185,9 @@ int gtpv1u_delete_s1u_tunnel(
     GTPV1U_ENB_DELETE_TUNNEL_RESP(message_p).rnti,
     teid_eNB);
   if (req_pP->from_gnb)
-    return itti_send_msg_to_task(TASK_RRC_ENB, instanceP, message_p);
-  else
     return itti_send_msg_to_task(TASK_RRC_GNB, instanceP, message_p);
+  else
+    return itti_send_msg_to_task(TASK_RRC_ENB, instanceP, message_p);
 }
 
 
