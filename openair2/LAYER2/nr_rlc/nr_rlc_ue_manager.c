@@ -112,12 +112,13 @@ void nr_rlc_manager_remove_ue(nr_rlc_ue_manager_t *_m, int rnti)
   int i;
   int j;
 
+printf("calling nr_rlc_manager_remove_ue rnti %d\n", rnti);
   for (i = 0; i < m->ue_count; i++)
     if (m->ue_list[i]->rnti == rnti)
       break;
 
   if (i == m->ue_count) {
-    LOG_D(RLC, "%s:%d:%s: warning: ue %d not found\n",
+    LOG_E(RLC, "%s:%d:%s: warning: ue %d not found\n",
           __FILE__, __LINE__, __FUNCTION__,
           rnti);
     return;

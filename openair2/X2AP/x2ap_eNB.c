@@ -305,7 +305,9 @@ void x2ap_eNB_handle_register_eNB(instance_t instance,
     x2ap_id_manager_init(&new_instance->id_manager);
     x2ap_timers_init(&new_instance->timers,
                      x2ap_register_eNB->t_reloc_prep,
-                     x2ap_register_eNB->tx2_reloc_overall);
+                     x2ap_register_eNB->tx2_reloc_overall,
+                     x2ap_register_eNB->t_dc_prep,
+                     x2ap_register_eNB->t_dc_overall);
 
     for (int i = 0; i< x2ap_register_eNB->num_cc; i++) {
       new_instance->eutra_band[i]              = x2ap_register_eNB->eutra_band[i];
@@ -476,7 +478,10 @@ void x2ap_eNB_handle_sgNB_add_req(instance_t instance,
   }
   /* id_source is ue_id, id_target is unknown yet */
   x2ap_set_ids(id_manager, ue_id, x2ap_ENDC_sgnb_addition_req->rnti, ue_id, -1);
-  x2ap_id_set_state(id_manager, ue_id, X2ID_STATE_NSA_PREPARE);
+  x2ap_id_set_state(id_manager, ue_id, X2ID_STATE_NSA_ENB_PREPARE);
+  x2ap_set_dc_prep_timer(id_manager, ue_id,
+                         x2ap_timer_get_tti(&instance_p->timers));
+  x2ap_id_set_target(id_manager, ue_id, x2ap_eNB_data);
 
   x2ap_eNB_generate_ENDC_x2_SgNB_addition_request(instance_p, x2ap_ENDC_sgnb_addition_req,
       x2ap_eNB_data, ue_id);
@@ -498,9 +503,6 @@ void x2ap_gNB_trigger_sgNB_add_req_ack(instance_t instance,
   x2ap_eNB_instance_t *instance_p;
   x2ap_eNB_data_t     *target;
   int                 ue_id;
-  /*int source_assoc_id = x2ap_ENDC_sgnb_addition_req_ACK->source_assoc_id;
-  int                 id_source;
-  int                 id_target;*/
 
   instance_p = x2ap_eNB_get_instance(instance);
   DevAssert(instance_p != NULL);
@@ -514,22 +516,13 @@ void x2ap_gNB_trigger_sgNB_add_req_ack(instance_t instance,
     X2AP_ERROR("could not allocate a new X2AP UE ID\n");
     exit(1);
   }
-  /* id_source is ue_id, id_target is unknown yet */
-  x2ap_set_ids(id_manager, ue_id, x2ap_ENDC_sgnb_addition_req_ACK->rnti, ue_id,
-      x2ap_ENDC_sgnb_addition_req_ACK->MeNB_ue_x2_id);
-  x2ap_id_set_state(id_manager, ue_id, X2ID_STATE_SOURCE_OVERALL);
-	
-
-  /*target = x2ap_get_eNB(NULL, source_assoc_id, 0);
-  DevAssert(target != NULL);*/
-
-  // rnti is a new information, save it
-
-  /*ue_id     = x2ap_handover_req_ack->x2_id_target;
-  id_source = x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
-  id_target = ue_id;
-  x2ap_set_ids(&instance_p->id_manager, ue_id, x2ap_handover_req_ack->rnti, id_source, id_target);*/
-
+  /* ID_Source is MeNB_ue_x2_id, id_target is rnti (rnti is SgNB_ue_x2_id) */
+  x2ap_set_ids(id_manager, ue_id,
+      x2ap_ENDC_sgnb_addition_req_ACK->SgNB_ue_x2_id,
+      x2ap_ENDC_sgnb_addition_req_ACK->MeNB_ue_x2_id,
+      x2ap_ENDC_sgnb_addition_req_ACK->SgNB_ue_x2_id);
+  x2ap_id_set_state(id_manager, ue_id, X2ID_STATE_NSA_GNB_OVERALL);
+  x2ap_id_set_target(id_manager, ue_id, target);
 
   x2ap_gNB_generate_ENDC_x2_SgNB_addition_request_ACK(instance_p, target,
       x2ap_ENDC_sgnb_addition_req_ACK, ue_id);

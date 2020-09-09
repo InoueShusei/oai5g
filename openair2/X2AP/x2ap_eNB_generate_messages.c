@@ -1668,8 +1668,6 @@ int x2ap_gNB_generate_ENDC_x2_SgNB_addition_request_ACK( x2ap_eNB_instance_t *in
 		uint32_t  len;
 		int       ret = 0;
 
-		int MeNB_UE_X2AP_id = x2ap_sgnb_addition_req_ACK->MeNB_ue_x2_id;
-		int SgNB_UE_X2AP_id = ue_id;
 		int e_rabs_admitted_tobeadded = x2ap_sgnb_addition_req_ACK->nb_e_rabs_admitted_tobeadded;
 		long int pDCPatSgNB = X2AP_EN_DC_ResourceConfiguration__pDCPatSgNB_present;
 		long int mCGresources = X2AP_EN_DC_ResourceConfiguration__mCGresources_not_present;
@@ -1694,7 +1692,7 @@ int x2ap_gNB_generate_ENDC_x2_SgNB_addition_request_ACK( x2ap_eNB_instance_t *in
 		ie->id = X2AP_ProtocolIE_ID_id_MeNB_UE_X2AP_ID;
 		ie->criticality= X2AP_Criticality_reject;
 		ie->value.present = X2AP_SgNBAdditionRequestAcknowledge_IEs__value_PR_UE_X2AP_ID;
-		ie->value.choice.UE_X2AP_ID = MeNB_UE_X2AP_id; //x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
+		ie->value.choice.UE_X2AP_ID = x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
 		ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
 		// SgNB_UE_X2AP_id
@@ -1702,7 +1700,7 @@ int x2ap_gNB_generate_ENDC_x2_SgNB_addition_request_ACK( x2ap_eNB_instance_t *in
 		ie->id = X2AP_ProtocolIE_ID_id_SgNB_UE_X2AP_ID;
 		ie->criticality= X2AP_Criticality_reject;
 		ie->value.present = X2AP_SgNBAdditionRequestAcknowledge_IEs__value_PR_SgNB_UE_X2AP_ID;
-		ie->value.choice.UE_X2AP_ID = SgNB_UE_X2AP_id; //x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
+		ie->value.choice.UE_X2AP_ID = x2ap_id_get_id_target(&instance_p->id_manager, ue_id);
 		ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
 		ie = (X2AP_SgNBAdditionRequestAcknowledge_IEs_t *)calloc(1, sizeof(X2AP_SgNBAdditionRequestAcknowledge_IEs_t));
@@ -1792,7 +1790,7 @@ int x2ap_eNB_generate_ENDC_x2_SgNB_reconfiguration_complete(
 	ie->id = X2AP_ProtocolIE_ID_id_MeNB_UE_X2AP_ID;
 	ie->criticality= X2AP_Criticality_reject;
 	ie->value.present = X2AP_SgNBReconfigurationComplete_IEs__value_PR_UE_X2AP_ID;
-	ie->value.choice.UE_X2AP_ID = ue_id; //x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
+	ie->value.choice.UE_X2AP_ID = x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
 	ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
 	ie = (X2AP_SgNBReconfigurationComplete_IEs_t *)calloc(1, sizeof(X2AP_SgNBReconfigurationComplete_IEs_t));
@@ -1820,4 +1818,53 @@ int x2ap_eNB_generate_ENDC_x2_SgNB_reconfiguration_complete(
 
 	return ret;
 
+}
+
+int x2ap_eNB_generate_ENDC_x2_SgNB_release_request(
+  x2ap_eNB_instance_t *instance_p, x2ap_eNB_data_t *x2ap_eNB_data_p,
+  int x2_id_source, int x2_id_target)
+{
+  X2AP_X2AP_PDU_t                        pdu;
+  X2AP_SgNBReleaseRequest_t     *out;
+  X2AP_SgNBReleaseRequest_IEs_t *ie;
+
+  uint8_t  *buffer;
+  uint32_t  len;
+  int       ret = 0;
+
+  DevAssert(instance_p != NULL);
+  DevAssert(x2ap_eNB_data_p != NULL);
+
+  /* Prepare the X2AP message to encode */
+  memset(&pdu, 0, sizeof(pdu));
+  pdu.present = X2AP_X2AP_PDU_PR_initiatingMessage;
+  pdu.choice.initiatingMessage.procedureCode = X2AP_ProcedureCode_id_meNBinitiatedSgNBRelease;
+  pdu.choice.initiatingMessage.criticality = X2AP_Criticality_ignore;
+  pdu.choice.initiatingMessage.value.present = X2AP_InitiatingMessage__value_PR_SgNBReleaseRequest;
+  out = &pdu.choice.initiatingMessage.value.choice.SgNBReleaseRequest;
+
+  ie = (X2AP_SgNBReleaseRequest_IEs_t *)calloc(1, sizeof(X2AP_SgNBReleaseRequest_IEs_t));
+  ie->id = X2AP_ProtocolIE_ID_id_MeNB_UE_X2AP_ID;
+  ie->criticality= X2AP_Criticality_reject;
+  ie->value.present = X2AP_SgNBReleaseRequest_IEs__value_PR_UE_X2AP_ID;
+  ie->value.choice.UE_X2AP_ID = x2_id_source;
+  ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
+
+  if (x2_id_target != -1) {
+    ie = (X2AP_SgNBReleaseRequest_IEs_t *)calloc(1, sizeof(X2AP_SgNBReleaseRequest_IEs_t));
+    ie->id = X2AP_ProtocolIE_ID_id_SgNB_UE_X2AP_ID;
+    ie->criticality= X2AP_Criticality_reject;
+    ie->value.present = X2AP_SgNBReleaseRequest_IEs__value_PR_SgNB_UE_X2AP_ID;
+    ie->value.choice.UE_X2AP_ID = x2_id_target;
+    ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
+  }
+
+  if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
+    X2AP_ERROR("Failed to encode ENDC X2 SgNB_release_request message\n");
+    return -1;
+  }
+
+  x2ap_eNB_itti_send_sctp_data_req(instance_p->instance, x2ap_eNB_data_p->assoc_id, buffer, len, 0);
+
+  return ret;
 }

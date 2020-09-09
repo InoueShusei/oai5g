@@ -28,19 +28,21 @@
 //-------------------------------------------------------------------------------------------//
 // Defines to access message fields.
 
-#define X2AP_REGISTER_ENB_REQ(mSGpTR)           		(mSGpTR)->ittiMsg.x2ap_register_enb_req
-#define X2AP_SETUP_REQ(mSGpTR)                  		(mSGpTR)->ittiMsg.x2ap_setup_req
-#define X2AP_SETUP_RESP(mSGpTR)                 		(mSGpTR)->ittiMsg.x2ap_setup_resp
-#define X2AP_HANDOVER_REQ(mSGpTR)               		(mSGpTR)->ittiMsg.x2ap_handover_req
-#define X2AP_HANDOVER_REQ_ACK(mSGpTR)           		(mSGpTR)->ittiMsg.x2ap_handover_req_ack
-#define X2AP_REGISTER_ENB_CNF(mSGpTR)           		(mSGpTR)->ittiMsg.x2ap_register_enb_cnf
-#define X2AP_DEREGISTERED_ENB_IND(mSGpTR)       		(mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
-#define X2AP_UE_CONTEXT_RELEASE(mSGpTR)         		(mSGpTR)->ittiMsg.x2ap_ue_context_release
-#define X2AP_HANDOVER_CANCEL(mSGpTR)            		(mSGpTR)->ittiMsg.x2ap_handover_cancel
-#define X2AP_SENB_ADDITION_REQ(mSGpTR)              	(mSGpTR)->ittiMsg.x2ap_senb_addition_req
-#define X2AP_ENDC_SGNB_ADDITION_REQ(mSGpTR)         	(mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_addition_req
-#define X2AP_ENDC_SGNB_ADDITION_REQ_ACK(mSGpTR)         (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_addition_req_ACK
-#define X2AP_ENDC_SGNB_RECONF_COMPLETE(mSGpTR)          (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_reconf_complete
+#define X2AP_REGISTER_ENB_REQ(mSGpTR)                           (mSGpTR)->ittiMsg.x2ap_register_enb_req
+#define X2AP_SETUP_REQ(mSGpTR)                                  (mSGpTR)->ittiMsg.x2ap_setup_req
+#define X2AP_SETUP_RESP(mSGpTR)                                 (mSGpTR)->ittiMsg.x2ap_setup_resp
+#define X2AP_HANDOVER_REQ(mSGpTR)                               (mSGpTR)->ittiMsg.x2ap_handover_req
+#define X2AP_HANDOVER_REQ_ACK(mSGpTR)                           (mSGpTR)->ittiMsg.x2ap_handover_req_ack
+#define X2AP_REGISTER_ENB_CNF(mSGpTR)                           (mSGpTR)->ittiMsg.x2ap_register_enb_cnf
+#define X2AP_DEREGISTERED_ENB_IND(mSGpTR)                       (mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
+#define X2AP_UE_CONTEXT_RELEASE(mSGpTR)                         (mSGpTR)->ittiMsg.x2ap_ue_context_release
+#define X2AP_HANDOVER_CANCEL(mSGpTR)                            (mSGpTR)->ittiMsg.x2ap_handover_cancel
+#define X2AP_SENB_ADDITION_REQ(mSGpTR)                          (mSGpTR)->ittiMsg.x2ap_senb_addition_req
+#define X2AP_ENDC_SGNB_ADDITION_REQ(mSGpTR)                     (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_addition_req
+#define X2AP_ENDC_SGNB_ADDITION_REQ_ACK(mSGpTR)                 (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_addition_req_ACK
+#define X2AP_ENDC_SGNB_RECONF_COMPLETE(mSGpTR)                  (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_reconf_complete
+#define X2AP_ENDC_SGNB_RELEASE_REQUEST(mSGpTR)                  (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_release_request
+#define X2AP_ENDC_DC_PREP_TIMEOUT(mSGpTR)                       (mSGpTR)->ittiMsg.x2ap_ENDC_dc_prep_timeout
 
 #define X2AP_MAX_NB_ENB_IP_ADDRESS 2
 
@@ -144,6 +146,8 @@ typedef struct x2ap_register_enb_req_s {
   /* timers (unit: millisecond) */
   int t_reloc_prep;
   int tx2_reloc_overall;
+  int t_dc_prep;
+  int t_dc_overall;
 } x2ap_register_enb_req_t;
 
 typedef struct x2ap_subframe_process_s {
@@ -394,6 +398,14 @@ typedef struct x2ap_ENDC_reconf_complete_s {
   int rrc_buffer_size;
 
 } x2ap_ENDC_reconf_complete_t;
+
+typedef struct x2ap_ENDC_sgnb_release_request_s {
+  int rnti;
+} x2ap_ENDC_sgnb_release_request_t;
+
+typedef struct x2ap_ENDC_dc_prep_timeout_s {
+  int rnti;
+} x2ap_ENDC_dc_prep_timeout_t;
 
 
 #endif /* X2AP_MESSAGES_TYPES_H_ */

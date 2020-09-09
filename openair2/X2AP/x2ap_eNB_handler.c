@@ -132,6 +132,12 @@ int x2ap_gNB_handle_ENDC_sGNB_reconfiguration_complete (instance_t instance,
                                           uint32_t stream,
                                           X2AP_X2AP_PDU_t *pdu);
 
+static
+int x2ap_gNB_handle_ENDC_sGNB_release_request(instance_t instance,
+                                          uint32_t assoc_id,
+                                          uint32_t stream,
+                                          X2AP_X2AP_PDU_t *pdu);
+
 
 /* Handlers matrix. Only eNB related procedure present here. Placement of callback functions according to X2AP_ProcedureCode.h */
 x2ap_message_decoded_callback x2ap_messages_callback[][3] = {
@@ -166,7 +172,7 @@ x2ap_message_decoded_callback x2ap_messages_callback[][3] = {
   { x2ap_gNB_handle_ENDC_sGNB_reconfiguration_complete, 0, 0 }, /*X2AP_ProcedureCode_id_sgNBReconfigurationCompletion*/
   { 0, 0, 0 },
   { 0, 0, 0 },
-  { 0, 0, 0 },
+  { x2ap_gNB_handle_ENDC_sGNB_release_request, 0, 0 }, /* meNBinitiatedSgNBRelease */
   { 0, 0, 0 },
   { 0, 0, 0 },
   { 0, 0, 0 },
@@ -1641,8 +1647,6 @@ int x2ap_gNB_handle_ENDC_sGNB_addition_request (instance_t instance,
                                           uint32_t stream,
                                           X2AP_X2AP_PDU_t *pdu)
 {
-
-
   X2AP_SgNBAdditionRequest_t             *x2SgNBAdditionRequest;
   X2AP_SgNBAdditionRequest_IEs_t         *ie;
 
@@ -1923,6 +1927,9 @@ int x2ap_eNB_handle_ENDC_sGNB_addition_response (instance_t instance,
 
 	  itti_send_msg_to_task(TASK_RRC_ENB, instance_p->instance, msg);
 
+          /* remove UE from x2, DC preparation is over */
+          x2ap_release_id(&instance_p->id_manager, ue_id);
+
 	  return 0;
 }
 
@@ -2003,5 +2010,96 @@ int x2ap_gNB_handle_ENDC_sGNB_reconfiguration_complete (instance_t instance,
 	return 0;
 }
 
+static
+int x2ap_gNB_handle_ENDC_sGNB_release_request(instance_t instance,
+                                          uint32_t assoc_id,
+                                          uint32_t stream,
+                                          X2AP_X2AP_PDU_t *pdu)
+{
+  /* the logic in this function is the following: when receiving a release
+   * request, the UE may exist in X2. Or not. If it's not in X2, it can
+   * nevertheless be in RRC.
+   * The release request message may contain the gNB id. Or not. It's better
+   * to look for the UE using the gNB rather than the eNB id. So if we have
+   * the gNB id we use it. If not, we use the eNB id.
+   */
+  X2AP_SgNBReleaseRequest_t     *req;
+  X2AP_SgNBReleaseRequest_IEs_t *ie;
 
+  x2ap_eNB_instance_t           *instance_p;
+  x2ap_eNB_data_t               *x2ap_eNB_data;
+  MessageDef                    *msg;
 
+  int                           id_source;
+  int                           id_target;
+  int                           rnti;
+  int                           ue_id;
+
+  DevAssert (pdu != NULL);
+  req = &pdu->choice.initiatingMessage.value.choice.SgNBReleaseRequest;
+
+  /*if (stream == 0) {
+    X2AP_ERROR ("Received new x2 SgNB Addition request on stream == 0\n");
+    // TODO: send a x2 failure response
+    return 0;
+  }*/
+
+  X2AP_DEBUG ("Received X2 SgNB Release Request message\n");
+
+  x2ap_eNB_data = x2ap_get_eNB(NULL, assoc_id, 0);
+  DevAssert(x2ap_eNB_data != NULL);
+
+  X2AP_INFO("X2AP Association id: %d \n",assoc_id);
+
+  instance_p = x2ap_eNB_get_instance(instance);
+  DevAssert(instance_p != NULL);
+
+  /* X2AP_ProtocolIE_ID_id_MeNB_UE_X2AP_ID */
+  X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_SgNBReleaseRequest_IEs_t, ie, req,
+                             X2AP_ProtocolIE_ID_id_MeNB_UE_X2AP_ID, true);
+  if (ie == NULL ) {
+    X2AP_ERROR("%s %d: ie is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  id_source = ie->value.choice.UE_X2AP_ID;
+
+  /* X2AP_ProtocolIE_ID_id_SgNB_UE_X2AP_ID */
+  X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_SgNBReleaseRequest_IEs_t, ie, req,
+                             X2AP_ProtocolIE_ID_id_SgNB_UE_X2AP_ID, false);
+  if (ie != NULL)
+    id_target = ie->value.choice.SgNB_UE_X2AP_ID;
+  else
+    id_target = -1;
+
+  /* find ue_id, preferably from id_target */
+  ue_id = -1;
+  if (id_target != -1)
+    ue_id = x2ap_find_id_from_id_target(&instance_p->id_manager, id_target);
+  if (ue_id == -1)
+    ue_id = x2ap_find_id_from_id_source(&instance_p->id_manager, id_source);
+
+  if (ue_id == -1) {
+    X2AP_WARN("%s %d: no UE found for id_source %d id_target %d\n",
+              __FILE__, __LINE__, id_source, id_target);
+  }
+
+  if (ue_id != -1) {
+    rnti = x2ap_id_get_rnti(&instance_p->id_manager, ue_id);
+
+    /* remove ue_id */
+    x2ap_release_id(&instance_p->id_manager, ue_id);
+  } else {
+    rnti = id_target;
+  }
+
+  if (rnti != -1) {
+    msg = itti_alloc_new_message(TASK_X2AP, X2AP_ENDC_SGNB_RELEASE_REQUEST);
+
+    X2AP_ENDC_SGNB_RELEASE_REQUEST(msg).rnti = rnti;
+
+    itti_send_msg_to_task(TASK_RRC_GNB, instance_p->instance, msg);
+  }
+
+  return 0;
+}

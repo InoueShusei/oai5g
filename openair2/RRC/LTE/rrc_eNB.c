@@ -5004,6 +5004,7 @@ void rrc_eNB_handover_ue_context_release(
   msg_delete_tunnels_p = itti_alloc_new_message(TASK_RRC_ENB, GTPV1U_ENB_DELETE_TUNNEL_REQ);
   memset(&GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p), 0, sizeof(GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p)));
   GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).rnti = ue_context_p->ue_context.rnti;
+  GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).from_gnb = 0;
 
   for (e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
     GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).eps_bearer_id[GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).num_erab++] =
@@ -7892,6 +7893,7 @@ rrc_eNB_decode_dcch(
               msg_delete_tunnels_p = itti_alloc_new_message(TASK_RRC_ENB, GTPV1U_ENB_DELETE_TUNNEL_REQ);
               memset(&GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p), 0, sizeof(GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p)));
               GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).rnti = ue_context_p->ue_context.rnti;
+              GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).from_gnb = 0;
 
               for(i = 0; i < NB_RB_MAX; i++) {
                 if(xid == ue_context_p->ue_context.e_rab[i].xid) {
@@ -9136,6 +9138,25 @@ void rrc_eNB_process_AdditionResponseInformation(const module_id_t enb_mod_idP, 
 
 }
 
+void rrc_eNB_process_ENDC_DC_prep_timeout(module_id_t module_id, x2ap_ENDC_dc_prep_timeout_t *m)
+{ 
+  rrc_eNB_ue_context_t *ue_context;
+
+  ue_context = rrc_eNB_get_ue_context(RC.rrc[module_id], m->rnti);
+  if (ue_context == NULL) {
+    LOG_E(RRC, "receiving DC prep timeout for unknown UE rnti %d\n", m->rnti);
+    return;
+  }
+
+  if (ue_context->ue_context.Status != RRC_NR_NSA) {
+    LOG_E(RRC, "receiving DC prep timeout for UE rnti %d not in state RRC_NR_NSA\n", m->rnti);
+    return;
+  }
+
+  LOG_I(RRC, "DC prep timeout for UE rnti %d, put back to RRC_RECONFIGURED mode\n", m->rnti);
+  ue_context->ue_context.Status = RRC_RECONFIGURED;
+}
+
 //-----------------------------------------------------------------------------
 void *rrc_enb_process_itti_msg(void *notUsed) {
   MessageDef                         *msg_p;
@@ -9416,6 +9437,11 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
 
     case X2AP_ENDC_SGNB_ADDITION_REQ_ACK: {
       rrc_eNB_process_AdditionResponseInformation(ENB_INSTANCE_TO_MODULE_ID(instance), &X2AP_ENDC_SGNB_ADDITION_REQ_ACK(msg_p));
+      break;
+    }
+
+    case X2AP_ENDC_DC_PREP_TIMEOUT: {
+      rrc_eNB_process_ENDC_DC_prep_timeout(ENB_INSTANCE_TO_MODULE_ID(instance), &X2AP_ENDC_DC_PREP_TIMEOUT(msg_p));
       break;
     }
 

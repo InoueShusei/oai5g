@@ -914,7 +914,7 @@ void rrc_rlc_register_rrc (rrc_data_ind_cb_t rrc_data_indP, rrc_data_conf_cb_t r
 
 rlc_op_status_t rrc_rlc_remove_ue (const protocol_ctxt_t* const x)
 {
-  LOG_D(RLC, "%s:%d:%s: remove UE %d\n", __FILE__, __LINE__, __FUNCTION__, x->rnti);
+  LOG_I(RLC, "%s:%d:%s: remove UE %d\n", __FILE__, __LINE__, __FUNCTION__, x->rnti);
   nr_rlc_manager_lock(nr_rlc_ue_manager);
   nr_rlc_manager_remove_ue(nr_rlc_ue_manager, x->rnti);
   nr_rlc_manager_unlock(nr_rlc_ue_manager);
