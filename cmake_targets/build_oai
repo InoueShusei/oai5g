@@ -671,9 +671,12 @@ function main() {
   if [ "$UE" = 1 ] ; then
 
     echo_info "Compiling UE specific part"
-    compilations \
-      $build_dir ue_ip \
-      CMakeFiles/ue_ip/ue_ip.ko $dbin/ue_ip.ko
+    if [ $IS_CONTAINER -eq 0 ]
+    then
+      compilations \
+        $build_dir ue_ip \
+        CMakeFiles/ue_ip/ue_ip.ko $dbin/ue_ip.ko
+    fi
 
 #    mkdir -p $DIR/at_commands/build
 #    cd $DIR/at_commands/build
