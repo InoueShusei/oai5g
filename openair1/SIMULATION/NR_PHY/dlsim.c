@@ -66,7 +66,8 @@
 #define inMicroS(a) (((double)(a))/(cpu_freq_GHz*1000.0))
 #include "SIMULATION/LTE_PHY/common_sim.h"
 
-
+#include <time.h>
+struct timespec start, stop;
 
 PHY_VARS_gNB *gNB;
 PHY_VARS_NR_UE *UE;
@@ -81,7 +82,6 @@ uint8_t nfapi_mode = 0;
 uint16_t NB_UE_INST = 1;
 uint64_t downlink_frequency[MAX_NUM_CCs][4];
 
-jiji
 
 // dummy functions
 int dummy_nr_ue_ul_indication(nr_uplink_indication_t *ul_info)              { return(0);  }
@@ -782,8 +782,12 @@ int main(int argc, char **argv)
         
         if (run_initial_sync)
           nr_common_signal_procedures(gNB,frame,slot);
-        else
+        else{
+          clock_gettime(CLOCK_MONOTONIC, &start);  
           phy_procedures_gNB_TX(gNB,frame,slot,0);
+          clock_gettime(CLOCK_MONOTONIC, &stop); 
+          printf("phy_procedures_gNB_gNB_TX:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+        }
             
         int txdataF_offset = (slot%2) * frame_parms->samples_per_slot_wCP;
         
