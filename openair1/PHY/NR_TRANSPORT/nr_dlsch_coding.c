@@ -568,7 +568,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 #endif
 
     start_meas(dlsch_interleaving_stats);
-    start_meas(dlsch_encoding_stats);
+    clock_gettime(CLOCK_MONOTONIC, &start);
     nr_interleaving_ldpc(E,
 			 mod_order,
 			 dlsch->harq_processes[harq_pid]->e+r_offset,
