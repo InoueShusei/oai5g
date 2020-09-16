@@ -36,7 +36,7 @@
 #include "PHY/MODULATION/nr_modulation.h"
 #include "PHY/NR_REFSIG/dmrs_nr.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
-
+#include <time.h>
 //#define DEBUG_DLSCH
 //#define DEBUG_DLSCH_MAPPING
 
@@ -130,6 +130,7 @@ uint8_t nr_generate_pdsch(PHY_VARS_gNB *gNB,
   time_stats_t *dlsch_interleaving_stats=&gNB->dlsch_interleaving_stats;
   time_stats_t *dlsch_segmentation_stats=&gNB->dlsch_segmentation_stats;
 
+  struct timespec start, stop;
   for (int dlsch_id=0;dlsch_id<NUMBER_OF_NR_DLSCH_MAX;dlsch_id++) {
     dlsch = gNB->dlsch[dlsch_id][0];
     if (dlsch->slot_tx[slot] == 0) continue;
@@ -162,11 +163,14 @@ uint8_t nr_generate_pdsch(PHY_VARS_gNB *gNB,
     /// CRC, coding, interleaving and rate matching
     AssertFatal(harq->pdu!=NULL,"harq->pdu is null\n");
     start_meas(dlsch_encoding_stats);
+    clock_gettime(CLOCK_MONOTONIC, &start); 
     nr_dlsch_encoding(gNB,
 		      harq->pdu, frame, slot, dlsch, frame_parms,tinput,tprep,tparity,toutput,
 		      dlsch_rate_matching_stats,
 		      dlsch_interleaving_stats,
 		      dlsch_segmentation_stats);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" nr_dlsch_encoding:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
     stop_meas(dlsch_encoding_stats);
 #ifdef DEBUG_DLSCH
     printf("PDSCH encoding:\nPayload:\n");
@@ -190,6 +194,7 @@ uint8_t nr_generate_pdsch(PHY_VARS_gNB *gNB,
     start_meas(dlsch_scrambling_stats);
     for (int q=0; q<rel15->NrOfCodewords; q++)
       memset((void*)scrambled_output[q], 0, (encoded_length>>5)*sizeof(uint32_t));
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int q=0; q<rel15->NrOfCodewords; q++)
       nr_pdsch_codeword_scrambling_optim(harq->f,
 					 encoded_length,
@@ -197,7 +202,8 @@ uint8_t nr_generate_pdsch(PHY_VARS_gNB *gNB,
 					 rel15->dlDmrsScramblingId,
 					 rel15->rnti,
 					 scrambled_output[q]);
-    
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" nr_pdsch_scrambling(codewords):%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
     stop_meas(dlsch_scrambling_stats);
 #ifdef DEBUG_DLSCH
     printf("PDSCH scrambling:\n");
@@ -211,12 +217,15 @@ uint8_t nr_generate_pdsch(PHY_VARS_gNB *gNB,
     /// Modulation
     start_meas(dlsch_modulation_stats);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_gNB_PDSCH_MODULATION, 1);
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int q=0; q<rel15->NrOfCodewords; q++)
       nr_modulation(scrambled_output[q],
 		    encoded_length,
 		    Qm,
 		    mod_symbs[q]);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_gNB_PDSCH_MODULATION, 0);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" nr_modulation(codewords):%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
     stop_meas(dlsch_modulation_stats);
 #ifdef DEBUG_DLSCH
     printf("PDSCH Modulation: Qm %d(%d)\n", Qm, nb_re);

@@ -222,7 +222,8 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
       
     /// DMRS QPSK modulation
     clock_gettime(CLOCK_MONOTONIC, &start);
-    for (int symb=cset_start_symb; symb<cset_start_symb + pdcch_pdu_rel15->DurationSymbols; symb++) {
+    int symb;
+    for (symb=cset_start_symb; symb<cset_start_symb + pdcch_pdu_rel15->DurationSymbols; symb++) {
       
       nr_modulation(gold_pdcch_dmrs[symb], dmrs_length, DMRS_MOD_ORDER, mod_dmrs[symb]); //Qm = 2 as DMRS is QPSK modulated
       
