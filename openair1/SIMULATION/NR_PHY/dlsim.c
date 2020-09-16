@@ -786,7 +786,7 @@ int main(int argc, char **argv)
           clock_gettime(CLOCK_MONOTONIC, &start);  
           phy_procedures_gNB_TX(gNB,frame,slot,0);
           clock_gettime(CLOCK_MONOTONIC, &stop); 
-          printf("phy_procedures_gNB_gNB_TX:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+          printf("phy_procedures_gNB_TX:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
         }
             
         int txdataF_offset = (slot%2) * frame_parms->samples_per_slot_wCP;

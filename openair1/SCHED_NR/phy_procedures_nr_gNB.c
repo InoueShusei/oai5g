@@ -131,6 +131,7 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
                            int frame,int slot,
                            int do_meas) {
   int aa;
+  struct timespec start, stop;
   NR_DL_FRAME_PARMS *fp=&gNB->frame_parms;
   nfapi_nr_config_request_scf_t *cfg = &gNB->gNB_config;
   int offset = gNB->CC_id;
@@ -175,12 +176,15 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_gNB_PDCCH_TX,1);
 
+    clock_gettime(CLOCK_MONOTONIC, &start);  
     nr_generate_dci_top(gNB,
 			pdcch_pdu_id>=0 ? &gNB->pdcch_pdu[pdcch_pdu_id].pdcch_pdu : NULL,
 			ul_pdcch_pdu_id>=0 ? &gNB->ul_pdcch_pdu[ul_pdcch_pdu_id].pdcch_pdu.pdcch_pdu : NULL,
 			gNB->nr_gold_pdcch_dmrs[slot],
 			&gNB->common_vars.txdataF[0][txdataF_offset],
 			AMP, *fp);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf("nr_generate_dci_top:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 
     // free up entry in pdcch tables
     if (pdcch_pdu_id>=0) gNB->pdcch_pdu[pdcch_pdu_id].frame = -1;
@@ -194,7 +198,11 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   for (int i=0; i<gNB->num_pdsch_rnti[slot]; i++) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,1);
     LOG_D(PHY, "PDSCH generation started (%d) in frame %d.%d\n", gNB->num_pdsch_rnti[slot],frame,slot);
+    clock_gettime(CLOCK_MONOTONIC, &start); 
     nr_generate_pdsch(gNB,frame, slot);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf("nr_generate_pdsch(%d):%d ns\n", i+1, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+
     if ((frame&127) == 0) dump_pdsch_stats(gNB);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,0);
   }

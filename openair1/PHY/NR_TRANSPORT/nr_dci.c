@@ -35,6 +35,8 @@
 #include "nr_sch_dmrs.h"
 #include "PHY/MODULATION/nr_modulation.h"
 
+#include <time.h>
+
 //#define DEBUG_PDCCH_DMRS
 //#define DEBUG_DCI
 //#define DEBUG_CHANNEL_CODING
@@ -177,6 +179,8 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
   int rb_offset;
   int n_rb;
 
+  struct timespec start, stop;
+
   AssertFatal(pdcch_pdu!=NULL || ul_dci_pdu!=NULL,"At least one pointer has to be !NULL\n");
   AssertFatal(pdcch_pdu==NULL || ul_dci_pdu==NULL,"Can't handle both DL and UL DCI in same slot\n");
 
@@ -217,6 +221,7 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
     dmrs_length += rb_offset*6; // To accommodate more DMRS symbols in case of rb offset
       
     /// DMRS QPSK modulation
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int symb=cset_start_symb; symb<cset_start_symb + pdcch_pdu_rel15->DurationSymbols; symb++) {
       
       nr_modulation(gold_pdcch_dmrs[symb], dmrs_length, DMRS_MOD_ORDER, mod_dmrs[symb]); //Qm = 2 as DMRS is QPSK modulated
@@ -229,6 +234,8 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
       
 #endif
     }
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf("%2d DMRS QPSKmoduation(%dsymbols):%d ns\n", d, symb, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
     
     /// DCI payload processing
     // CRC attachment + Scrambling + Channel coding + Rate matching
@@ -242,7 +249,10 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
 						   pdcch_pdu_rel15->dci_pdu.PayloadSizeBits[d], 
 						   pdcch_pdu_rel15->dci_pdu.AggregationLevel[d],
 						   0,NULL);
+    clock_gettime(CLOCK_MONOTONIC, &start);          
     polar_encoder_fast((uint64_t*)pdcch_pdu_rel15->dci_pdu.Payload[d], (void*)encoder_output, n_RNTI,1,currentPtr);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf("%2d polar_encoder_fast:%d ns\n", d, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 #ifdef DEBUG_CHANNEL_CODING
     printf("polar rnti %x,length %d, L %d\n",n_RNTI, pdcch_pdu_rel15->dci_pdu.PayloadSizeBits[d],pdcch_pdu_rel15->dci_pdu.AggregationLevel[d]);
     printf("DCI PDU: [0]->0x%lx \t [1]->0x%lx\n",
@@ -256,7 +266,10 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
 #endif
     /// Scrambling
     uint32_t scrambled_output[NR_MAX_DCI_SIZE_DWORD]= {0};
+    clock_gettime(CLOCK_MONOTONIC, &start);
     nr_pdcch_scrambling(encoder_output, encoded_length, Nid, scrambling_RNTI, scrambled_output);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    printf("%2d nr_pdcch_scrambling:%d ns\n", d, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 #ifdef DEBUG_CHANNEL_CODING
     printf("scrambled output: [0]->0x%08x \t [1]->0x%08x \t [2]->0x%08x \t [3]->0x%08x\t [4]->0x%08x\t [5]->0x%08x\t \
 [6]->0x%08x \t [7]->0x%08x \t [8]->0x%08x \t [9]->0x%08x\t [10]->0x%08x\t [11]->0x%08x\n",
@@ -265,7 +278,10 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
 #endif
     /// QPSK modulation
     int16_t mod_dci[NR_MAX_DCI_SIZE>>1] __attribute__((aligned(16)));
+    clock_gettime(CLOCK_MONOTONIC, &start);
     nr_modulation(scrambled_output, encoded_length, DMRS_MOD_ORDER, mod_dci); //Qm = 2 as DMRS is QPSK modulated
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    printf("%2d QPSK modulation:%d ns\n", d, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 #ifdef DEBUG_DCI
     
     for (int i=0; i<encoded_length>>1; i++)
@@ -283,6 +299,7 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
     uint8_t nb_regs = pdcch_pdu_rel15->dci_pdu.AggregationLevel[d]*NR_NB_REG_PER_CCE;
 
     /*Mapping the encoded DCI along with the DMRS */
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int reg_idx=reg_idx0; reg_idx<(nb_regs+reg_idx0); reg_idx++) {
       k = cset_start_sc + (12*reg_idx/cset_nsymb);
       
@@ -327,7 +344,10 @@ uint8_t nr_generate_dci_top(PHY_VARS_gNB *gNB,
 	if (k >= frame_parms.ofdm_symbol_size)
 	  k -= frame_parms.ofdm_symbol_size;
       } // m
-    } // reg_idx
+    }// reg_idx
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    printf("%2d mapping:%d ns\n", d, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+
     
   } // for (int d=0;d<pdcch_pdu_rel15->numDlDci;d++)
   return 0;
