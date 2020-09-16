@@ -319,7 +319,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 		      time_stats_t *dlsch_rate_matching_stats,time_stats_t *dlsch_interleaving_stats,
 		      time_stats_t *dlsch_segmentation_stats)
 {
-
+  struct timespec start,stop;
   unsigned int G;
   unsigned int crc=1;
   uint8_t harq_pid = dlsch->harq_ids[frame%2][slot];
@@ -396,7 +396,10 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 
     if (A > 3824) {
       // Add 24-bit crc (polynomial A) to payload
+    clock_gettime(CLOCK_MONOTONIC, &start);
       crc = crc24a(a,A)>>8;
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" crc:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
       a[A>>3] = ((uint8_t*)&crc)[2];
       a[1+(A>>3)] = ((uint8_t*)&crc)[1];
       a[2+(A>>3)] = ((uint8_t*)&crc)[0];
@@ -436,6 +439,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 		BG = 1;
 
     start_meas(dlsch_segmentation_stats);
+    clock_gettime(CLOCK_MONOTONIC, &start); 
     Kb = nr_segmentation(dlsch->harq_processes[harq_pid]->b,
 		         dlsch->harq_processes[harq_pid]->c,
 		         dlsch->harq_processes[harq_pid]->B,
@@ -444,6 +448,8 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 		         Zc, 
 		         &dlsch->harq_processes[harq_pid]->F,
                          BG);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" segmentstion:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);            
     stop_meas(dlsch_segmentation_stats);
     F = dlsch->harq_processes[harq_pid]->F;
 
@@ -478,10 +484,14 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
     impp.tparity = tparity;
     impp.toutput = toutput;
 
-    for(int j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+     clock_gettime(CLOCK_MONOTONIC, &start);
+     int j;
+    for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
       impp.macro_num=j;
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
     }
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" LDPC_encoding(%d times):%d ns\n", j, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 
 
 #ifdef DEBUG_DLSCH_CODING
@@ -510,8 +520,10 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 #ifdef DEBUG_DLSCH_CODING
   LOG_D(PHY,"rvidx in encoding = %d\n", rel15->rvIndex[0]);
 #endif
-
+   clock_gettime(CLOCK_MONOTONIC, &start); 
     E = nr_get_E(G, dlsch->harq_processes[harq_pid]->C, mod_order, rel15->nrOfLayers, r);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" getE:%d ns\n", (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 
     //#ifdef DEBUG_DLSCH_CODING
     LOG_D(PHY,"Rate Matching, Code segment %d/%d (coded bits (G) %u, E %d, Filler bits %d, Filler offset %d mod_order %d, nb_rb %d)...\n",
@@ -527,9 +539,14 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
     if (rel15->nrOfLayers < Nl)
       Nl = rel15->nrOfLayers;
 
+    start_meas(dlsch_rate_matching_stats);
     Tbslbrm = nr_compute_tbslbrm(rel15->mcsTable[0],nb_rb,Nl,dlsch->harq_processes[harq_pid]->C);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" computeTBSLBRM(%2d):%d ns\n", r, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+
 
     start_meas(dlsch_rate_matching_stats);
+  clock_gettime(CLOCK_MONOTONIC, &start); 
     nr_rate_matching_ldpc(Ilbrm,
                           Tbslbrm,
                           BG,
@@ -540,7 +557,10 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
                           F,
                           Kr-F-2*(*Zc),
                           rel15->rvIndex[0],
-                          E);
+                     E);
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" rateMatching(%2d):%d ns\n", r, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+                          
     stop_meas(dlsch_rate_matching_stats);
 #ifdef DEBUG_DLSCH_CODING
     for (int i =0; i<16; i++)
@@ -548,10 +568,14 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 #endif
 
     start_meas(dlsch_interleaving_stats);
+    start_meas(dlsch_encoding_stats);
     nr_interleaving_ldpc(E,
 			 mod_order,
 			 dlsch->harq_processes[harq_pid]->e+r_offset,
 			 dlsch->harq_processes[harq_pid]->f+r_offset);
+       clock_gettime(CLOCK_MONOTONIC, &stop); 
+    printf(" interleaveLDPC(%2d):%d ns\n", r, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+
     stop_meas(dlsch_interleaving_stats);
 
 #ifdef DEBUG_DLSCH_CODING
