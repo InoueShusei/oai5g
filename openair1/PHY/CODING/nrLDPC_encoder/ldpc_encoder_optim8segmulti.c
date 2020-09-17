@@ -59,8 +59,8 @@ int nrLDPC_encod(unsigned char **test_input,unsigned char **channel_input,int Zc
   
   macro_segment = 8*impp->macro_num;
   macro_segment_end = (impp->n_segments > 8*(impp->macro_num+1)) ? 8*(impp->macro_num+1) : impp->n_segments;
-  ///printf("macro_segment: %d\n", macro_segment);
-  ///printf("macro_segment_end: %d\n", macro_segment_end );
+  printf("macro_segment: %d\n", macro_segment);
+  printf("macro_segment_end: %d\n", macro_segment_end );
 
 #ifdef __AVX2__
   __m256i shufmask = _mm256_set_epi64x(0x0303030303030303, 0x0202020202020202,0x0101010101010101, 0x0000000000000000);
