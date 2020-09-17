@@ -484,14 +484,14 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
     impp.tparity = tparity;
     impp.toutput = toutput;
 
-     clock_gettime(CLOCK_MONOTONIC, &start);
      int j;
     for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+     clock_gettime(CLOCK_MONOTONIC, &start);
       impp.macro_num=j;
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
-    }
     clock_gettime(CLOCK_MONOTONIC, &stop); 
-    printf(" LDPC_encoding(%d times):%d ns\n", j, (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+    printf(" LDPC_encoding(%d):%d ns\n", j,  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+    }
 
 
 #ifdef DEBUG_DLSCH_CODING
