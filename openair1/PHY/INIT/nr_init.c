@@ -74,6 +74,28 @@ int l1_north_init_gNB() {
   return(0);
 }
 
+//////////////////////////////////
+typedef struct{
+  unsigned char **test_input;
+  unsigned char **channel_input;
+  int Zc;
+  int Kb;
+  short block_length;
+  short B6;
+  encoder_implemparams_t *impp;
+} LDPCencoding_t;
+
+typedef struct{
+LDPCencoding_t param;
+pthread_t thread;
+pthread_attr_t attr;
+pthread_cond_t cond;
+pthread_mutex_t mutex;
+int icnt;
+} mlt_thread_LDPCencoding_t;
+
+mlt_thread_LDPCencoding_t *LDPC_proc;
+//////////////////////////////////
 
 int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
                     unsigned char is_secondary_gNB,
@@ -283,6 +305,16 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
   for (ulsch_id=0; ulsch_id<NUMBER_OF_UE_MAX; ulsch_id++)
     gNB->UE_stats_ptr[ulsch_id] = &gNB->UE_stats[ulsch_id];
 */
+//////////////////
+pthread_attr_init(&LDPCproc->attr);
+LDPC_proc->icnt = -1; //initialize instance count
+pthread_create(
+  &LDPC_proc->thread,
+  &LDOC_proc->attr,
+  (void*)parallel_LDPCencoding,
+  LDPC_proc
+);
+/////////////////
   printf("After ULSCH init : %p\n",gNB->dlsch[0][0]->harq_processes[0]);
   return (0);
 }

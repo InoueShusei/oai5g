@@ -309,6 +309,55 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
   }
 }
 
+
+/////////////////////////////////////////////////
+static void *parallel_LDPCencoding(void *proc){
+  unsigned char **test_input       = proc->param.test_input;
+  unsigned char **channel_input;   = proc->param.channel_input;
+  int Zc                           = proc->param.Zc;
+  int Kb                           = proc->param.Kb;
+  short block_length               = proc->param.block_length;
+  short B6                         = proc->param.B6;
+  encoder_implemparams_t *impp     = proc->param.impp;
+  char thread_name[100];
+  int index;
+  sprintf(thread_name, "MultiProcessLDPCencoding_thread")
+  while( !oai_exit ){
+    if( wait_on_condition(&proc->mutex, &proc->cond, &proc->icnt, thread_name)<0 ) break;
+
+    
+    if( oai_exit ) break;
+    //target process
+    for(index=1 ; index<(impp.n_segments/8+1) ; index++){
+    proc->param.impp.macro_num = index;
+    nrLDPC_encod(**test_input, **channel_input,Zc, Kb, block_length,t BG, impp);
+    }
+
+    if (release_thread(&L1_proc->mutex,&L1_proc->instance_cnt,thread_name)<0) break;
+    //substituting -1 for icnt
+  }
+  return 0;
+}
+
+int wakeup_parallel_LDPCencoding_thread(void *proc){
+
+  int ret;
+  AssertFatal((ret=pthread_mutex_lock(&proc->mutex))==0,"mutex_lock returns %d\n",ret);
+  //process+inclement instance count
+  proc->icnt +=1;
+  AssertFatal((ret=pthread_mutex_unlock(&proc->mutex))==0,"muex_unlock returns %d\n",ret);
+
+  if (pthread_cond_signal(&proc->cond) != 0) {
+    LOG_E( PHY, "[gNB] ERROR pthread_cond_signal for gNB RXn-TXnp4 thread\n");
+    exit_fun( "ERROR pthread_cond_signal" );
+    return(-1);
+  }
+
+  return 0;
+}
+/////////////////////////////////////////////////
+
+
 int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 		      unsigned char *a,
                       int frame,
@@ -484,14 +533,23 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
     impp.tparity = tparity;
     impp.toutput = toutput;
 
-     int j;
-    for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
      clock_gettime(CLOCK_MONOTONIC, &start);
-      impp.macro_num=j;
+     //substituting parameters
+     LDPC_proc->param.test_input = dlsch->harq_processes[harq_pid]->c;
+     LDPC_proc->param.channel_input = dlsch->harq_processes[harq_pid]->d;
+     LDPC_proc->param.Zc = Zc;
+     LDPC_proc->param.Kb = Kb;
+     LDPC_proc->param.block_length = Kr;
+     LDPC_proc->param.B6 = BG;
+     LDPC_proc->param.impp = impp;
+     wakeup_nrLDPCencoding_thread();
+    //for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+      impp.macro_num=0;
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
+    //}
+    //join?
     clock_gettime(CLOCK_MONOTONIC, &stop); 
-    printf(" LDPC_encoding(%d):%d ns\n", j,  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
-    }
+    printf(" LDPC_encoding(1):%d ns\n",  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 
 
 #ifdef DEBUG_DLSCH_CODING
