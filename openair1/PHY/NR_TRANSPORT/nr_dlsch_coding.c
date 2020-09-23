@@ -326,7 +326,7 @@ void *parallel_LDPCencoding(void *parameters){
   encoder_implemparams_t impp;
   impp.macro_num = 0;
   impp.n_segments = 1;
-   nrLDPC_encoder(test_input, channel_input, Zc, Kb, block_length,B6, impp);
+   nrLDPC_encoder(test_input, channel_input, Zc, Kb, block_length,B6, &impp);
   char thread_name[100];
   int index;
   struct timespec start, stop;
