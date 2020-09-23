@@ -309,9 +309,8 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
     gNB->UE_stats_ptr[ulsch_id] = &gNB->UE_stats[ulsch_id];
 */
 //////////////////
-LDPC_proc = malloc( sizeof(mlt_thread_LDPCencoding_t));
-LDPC_proc->param.test_input = malloc();
-LDPC_proc->param.channel_input = malloc();
+LDPC_proc = malloc( sizeof(mlt_thread_LDPCencoding_t) );
+
 pthread_attr_init(&LDPC_proc->attr);
 LDPC_proc->icnt = -1; //initialize instance count
 pthread_create(
