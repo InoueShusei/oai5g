@@ -337,11 +337,11 @@ void *parallel_LDPCencoding(void *parameters){
 
     for(index=1 ; index<(proc->param.impp.n_segments/8+1) ; index++){
       clock_gettime(CLOCK_MONOTONIC, &start);
-      prinf("function start(%d):%d\n", index+1, start.tv_sec*1000*1000*1000+start.tv_nsec);
+      printf("function start(%d):%d\n", index+1, start.tv_sec*1000*1000*1000+start.tv_nsec);
     proc->param.impp.macro_num = index;
     nrLDPC_encoder(proc->param.test_input, proc->param.channel_input, proc->param.Zc, proc->param.Kb, proc->param.block_length,proc->param.B6, &proc->param.impp);
       clock_gettime(CLOCK_MONOTONIC, &stop); 
-      prinf("function end(%d):%d\n", index+1, stop.tv_sec*1000*1000*1000+stop.tv_nsec);
+      printf("function end(%d):%d\n", index+1, stop.tv_sec*1000*1000*1000+stop.tv_nsec);
       printf(" LDPC_encoding(%d):%d ns\n", index+1,  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
     }
 
@@ -559,11 +559,11 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
      wakeup_parallel_LDPCencoding_thread( LDPC_proc );
     //for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
       clock_gettime(CLOCK_MONOTONIC, &func1);
-      prinf("function start(%d):%d\n",1, func1.tv_sec*1000*1000*1000+func1.tv_nsec);
+      printf("function start(%d):%d\n",1, func1.tv_sec*1000*1000*1000+func1.tv_nsec);
       impp.macro_num=0;
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
       clock_gettime(CLOCK_MONOTONIC, &func2); 
-      prinf("function start(%d):%d\n", 1, func2.tv_sec*1000*1000*1000+func2.tv_nsec);
+      printf("function start(%d):%d\n", 1, func2.tv_sec*1000*1000*1000+func2.tv_nsec);
       printf(" LDPC_encoding(1):%d ns\n",  (func2.tv_sec - func1.tv_sec)*1000000000 + func2.tv_nsec - func1.tv_nsec);
     //}
       while(!oai_exit){
