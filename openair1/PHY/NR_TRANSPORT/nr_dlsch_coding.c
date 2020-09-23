@@ -545,7 +545,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
      LDPC_proc->param.block_length = Kr;
      LDPC_proc->param.B6 = BG;
      LDPC_proc->param.impp = impp;
-     wakeup_nrLDPCencoding_thread();
+     wakeup_nrLDPCencoding_thread( LDPC_proc );
     //for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
       impp.macro_num=0;
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
