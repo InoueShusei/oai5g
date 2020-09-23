@@ -39,7 +39,7 @@
 #include "PHY/TOOLS/time_meas.h"
 #include "openair1/PHY/CODING/nrLDPC_defs.h"
 
-//#define DEBUG_LDPC
+#define DEBUG_LDPC
 
 #include "ldpc_encode_parity_check.c"
 #include "ldpc_generate_coefficient.c"
@@ -95,8 +95,8 @@ int nrLDPC_encod(unsigned char **test_input,unsigned char **channel_input,int Zc
     }
 
 #ifdef DEBUG_LDPC
-  LOG_D(PHY,"ldpc_encoder_optim_8seg: BG %d, Zc %d, Kb %d, block_length %d, segments %d\n",BG,Zc,Kb,block_length,n_segments);
-  LOG_D(PHY,"ldpc_encoder_optim_8seg: PDU (seg 0) %x %x %x %x\n",test_input[0][0],test_input[0][1],test_input[0][2],test_input[0][3]);
+  LOG_I(PHY,"ldpc_encoder_optim_8seg: BG %d, Zc %d, Kb %d, block_length %d, segments %d\n",BG,Zc,Kb,block_length,n_segments);
+  LOG_I(PHY,"ldpc_encoder_optim_8seg: PDU (seg 0) %x %x %x %x\n",test_input[0][0],test_input[0][1],test_input[0][2],test_input[0][3]);
 #endif
 
   AssertFatal(Zc>0,"no valid Zc found for block length %d\n",block_length);
