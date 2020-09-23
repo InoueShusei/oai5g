@@ -313,14 +313,15 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
 /////////////////////////////////////////////////
 extern mlt_thread_LDPCencoding_t *LDPC_proc;
 
-static void *parallel_LDPCencoding(void *proc){
-  unsigned char **test_input       = proc->param.test_input;
+static void *parallel_LDPCencoding(void *parameters){
+  mlt_thread_LDPCencoding_t *proc = (mlt_thread_LDPCencoding_t*) parameters;
+  /* unsigned char **test_input       = proc->param.test_input;
   unsigned char **channel_input;   = proc->param.channel_input;
   int Zc                           = proc->param.Zc;
   int Kb                           = proc->param.Kb;
   short block_length               = proc->param.block_length;
   short B6                         = proc->param.B6;
-  encoder_implemparams_t *impp     = proc->param.impp;
+  encoder_implemparams_t impp     = proc->param.impp; */
   char thread_name[100];
   int index;
   sprintf(thread_name, "MultiProcessLDPCencoding_thread");
@@ -330,12 +331,13 @@ static void *parallel_LDPCencoding(void *proc){
     
     if( oai_exit ) break;
     //target process
-    for(index=1 ; index<(impp.n_segments/8+1) ; index++){
+
+    for(index=1 ; index<(proc->param.impp.n_segments/8+1) ; index++){
     proc->param.impp.macro_num = index;
-    nrLDPC_encod(**test_input, **channel_input,Zc, Kb, block_length,t BG, impp);
+    nrLDPC_encoder(proc->param.test_input, proc->param.channel_input, proc->param.Zc, proc->param.Kb, proc->param.block_length,proc->param.B6, &proc->param.impp);
     }
 
-    if (release_thread(&L1_proc->mutex,&L1_proc->instance_cnt,thread_name)<0) break;
+    if (release_thread(&proc->mutex,&proc->icnt,thread_name)<0) break;
     //substituting -1 for icnt
   }
   return 0;
@@ -370,7 +372,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 		      time_stats_t *dlsch_rate_matching_stats,time_stats_t *dlsch_interleaving_stats,
 		      time_stats_t *dlsch_segmentation_stats)
 {
-  struct timespec start,stop;
+  struct timespec start,stop,func1,func2;
   unsigned int G;
   unsigned int crc=1;
   uint8_t harq_pid = dlsch->harq_ids[frame%2][slot];
@@ -553,7 +555,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
     //join?
     ////////////////////////////////
     clock_gettime(CLOCK_MONOTONIC, &stop); 
-    printf(" LDPC_encoding(1):%d ns\n",  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+    printf(" LDPC_encoding:%d ns\n",  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 
 
 #ifdef DEBUG_DLSCH_CODING

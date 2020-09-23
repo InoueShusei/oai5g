@@ -76,7 +76,8 @@ int l1_north_init_gNB() {
 
 //////////////////////////////////
 #include <pthread.h>
-extern static void *parallel_LDPCencoding(void *);
+static void *parallel_LDPCencoding;
+
 typedef struct{
   unsigned char **test_input;
   unsigned char **channel_input;
@@ -84,7 +85,7 @@ typedef struct{
   int Kb;
   short block_length;
   short B6;
-  encoder_implemparams_t *impp;
+  encoder_implemparams_t impp;
 } LDPCencoding_t;
 
 typedef struct{
@@ -308,6 +309,9 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
     gNB->UE_stats_ptr[ulsch_id] = &gNB->UE_stats[ulsch_id];
 */
 //////////////////
+LDPC_proc = malloc( sizeof(mlt_thread_LDPCencoding_t));
+LDPC_proc->param.test_input = malloc();
+LDPC_proc->param.channel_input = malloc();
 pthread_attr_init(&LDPC_proc->attr);
 LDPC_proc->icnt = -1; //initialize instance count
 pthread_create(
