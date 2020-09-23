@@ -324,7 +324,7 @@ void *parallel_LDPCencoding(void *parameters){
   short block_length               = 8448;
   short B6                         = 1;
   encoder_implemparams_t impp;
-  impp.macro_num = 0;
+  impp.macro_num = 1;
   impp.tinput =NULL;
   impp.toutput = NULL;
   impp.tparity = NULL;
