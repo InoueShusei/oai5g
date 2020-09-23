@@ -334,7 +334,7 @@ void *parallel_LDPCencoding(void *parameters){
     
     if( oai_exit ) break;
     //target process
-
+    usleep(100);
     for(index=1 ; index<(proc->param.impp.n_segments/8+1) ; index++){
       clock_gettime(CLOCK_MONOTONIC, &start);
       printf("function start(%d):%d\n", index+1, start.tv_sec*1000*1000*1000+start.tv_nsec);
@@ -556,8 +556,8 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
      LDPC_proc->param.block_length = Kr;
      LDPC_proc->param.B6 = BG;
      LDPC_proc->param.impp = impp;
-     wakeup_parallel_LDPCencoding_thread( LDPC_proc );
     //for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+     wakeup_parallel_LDPCencoding_thread( LDPC_proc );
       clock_gettime(CLOCK_MONOTONIC, &func1);
       printf("function start(%d):%d\n",1, func1.tv_sec*1000*1000*1000+func1.tv_nsec);
       impp.macro_num=0;
