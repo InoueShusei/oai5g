@@ -311,7 +311,9 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
 
 
 /////////////////////////////////////////////////
+
 extern mlt_thread_LDPCencoding_t *LDPC_proc;
+extern volatile int oai_exit;//extern int oai_exit;
 
 static void *parallel_LDPCencoding(void *parameters){
   mlt_thread_LDPCencoding_t *proc = (mlt_thread_LDPCencoding_t*) parameters;
@@ -324,6 +326,7 @@ static void *parallel_LDPCencoding(void *parameters){
   encoder_implemparams_t impp     = proc->param.impp; */
   char thread_name[100];
   int index;
+  struct timespec start, stop;
   sprintf(thread_name, "MultiProcessLDPCencoding_thread");
   while( !oai_exit ){
     if( wait_on_condition(&proc->mutex, &proc->cond, &proc->icnt, thread_name)<0 ) break;
@@ -333,8 +336,11 @@ static void *parallel_LDPCencoding(void *parameters){
     //target process
 
     for(index=1 ; index<(proc->param.impp.n_segments/8+1) ; index++){
+      clock_gettime(CLOCK_MONOTONIC, &start);
     proc->param.impp.macro_num = index;
     nrLDPC_encoder(proc->param.test_input, proc->param.channel_input, proc->param.Zc, proc->param.Kb, proc->param.block_length,proc->param.B6, &proc->param.impp);
+      clock_gettime(CLOCK_MONOTONIC, &stop); 
+      printf(" LDPC_encoding(%d):%d ns\n", index+1,  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
     }
 
     if (release_thread(&proc->mutex,&proc->icnt,thread_name)<0) break;
@@ -549,13 +555,16 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
      LDPC_proc->param.impp = impp;
      wakeup_nrLDPCencoding_thread( LDPC_proc );
     //for(j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+      clock_gettime(CLOCK_MONOTONIC, &func1);
       impp.macro_num=0;
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
+      clock_gettime(CLOCK_MONOTONIC, &func2); 
+    printf(" LDPC_encoding(1):%d ns\n",  (func2.tv_sec - func1.tv_sec)*1000000000 + func2.tv_nsec - func1.tv_nsec);
     //}
     //join?
     ////////////////////////////////
     clock_gettime(CLOCK_MONOTONIC, &stop); 
-    printf(" LDPC_encoding:%d ns\n",  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
+    printf(" LDPC_encoding_Total:%d ns\n",  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 
 
 #ifdef DEBUG_DLSCH_CODING

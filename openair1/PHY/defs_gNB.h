@@ -818,4 +818,24 @@ typedef struct PHY_VARS_gNB_s {
 
 } PHY_VARS_gNB;
 
+///////////////////////////////////////////
+typedef struct encording_t{
+  unsigned char **test_input;
+  unsigned char **channel_input;
+  int Zc;
+  int Kb;
+  short block_length;
+  short B6;
+  encoder_implemparams_t impp;
+} LDPCencoding_t;
+
+typedef struct m_thread{
+LDPCencoding_t param;
+pthread_t thread;
+pthread_attr_t attr;
+pthread_cond_t cond;
+pthread_mutex_t mutex;
+int icnt;
+} mlt_thread_LDPCencoding_t;
+///////////////////////////////////////////
 #endif

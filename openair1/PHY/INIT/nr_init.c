@@ -77,26 +77,6 @@ int l1_north_init_gNB() {
 //////////////////////////////////
 #include <pthread.h>
 static void *parallel_LDPCencoding;
-
-typedef struct{
-  unsigned char **test_input;
-  unsigned char **channel_input;
-  int Zc;
-  int Kb;
-  short block_length;
-  short B6;
-  encoder_implemparams_t impp;
-} LDPCencoding_t;
-
-typedef struct{
-LDPCencoding_t param;
-pthread_t thread;
-pthread_attr_t attr;
-pthread_cond_t cond;
-pthread_mutex_t mutex;
-int icnt;
-} mlt_thread_LDPCencoding_t;
-
 mlt_thread_LDPCencoding_t *LDPC_proc;
 //////////////////////////////////
 
