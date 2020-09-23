@@ -349,9 +349,10 @@ static void *parallel_LDPCencoding(void *parameters){
   return 0;
 }
 
-int wakeup_parallel_LDPCencoding_thread(void *proc){
+int wakeup_parallel_LDPCencoding_thread(void *parameters){
 
   int ret;
+  mlt_thread_LDPCencoding_t *proc = (mlt_thread_LDPCencoding_t*) parameters;
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex))==0,"mutex_lock returns %d\n",ret);
   //process+inclement instance count
   proc->icnt +=1;
