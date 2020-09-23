@@ -311,6 +311,8 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
 
 
 /////////////////////////////////////////////////
+extern mlt_thread_LDPCencoding_t *LDPC_proc;
+
 static void *parallel_LDPCencoding(void *proc){
   unsigned char **test_input       = proc->param.test_input;
   unsigned char **channel_input;   = proc->param.channel_input;
@@ -321,7 +323,7 @@ static void *parallel_LDPCencoding(void *proc){
   encoder_implemparams_t *impp     = proc->param.impp;
   char thread_name[100];
   int index;
-  sprintf(thread_name, "MultiProcessLDPCencoding_thread")
+  sprintf(thread_name, "MultiProcessLDPCencoding_thread");
   while( !oai_exit ){
     if( wait_on_condition(&proc->mutex, &proc->cond, &proc->icnt, thread_name)<0 ) break;
 
@@ -535,7 +537,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
 
      clock_gettime(CLOCK_MONOTONIC, &start);
      /////////////////////////////////
-     //substituting parameters
+     //substituting parameters of multi thread function
      LDPC_proc->param.test_input = dlsch->harq_processes[harq_pid]->c;
      LDPC_proc->param.channel_input = dlsch->harq_processes[harq_pid]->d;
      LDPC_proc->param.Zc = Zc;
