@@ -325,6 +325,10 @@ void *parallel_LDPCencoding(void *parameters){
   short B6                         = 1;
   encoder_implemparams_t impp;
   impp.macro_num = 0;
+  impp.tinput =NULL;
+  impp.toutput = NULL;
+  impp.tparity = NULL;
+  impp.tprep = NULL;
   impp.n_segments = 16;
   for(int k=0 ; k<30 ; k++){
     test_input[k] = malloc(sizeof(unsigned char)*10000);
