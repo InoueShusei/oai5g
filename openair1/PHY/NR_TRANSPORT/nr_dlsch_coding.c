@@ -317,13 +317,16 @@ extern volatile int oai_exit;//extern int oai_exit;
 
 void *parallel_LDPCencoding(void *parameters){
   mlt_thread_LDPCencoding_t *proc = (mlt_thread_LDPCencoding_t*) parameters;
-  /* unsigned char **test_input       = proc->param.test_input;
-  unsigned char **channel_input;   = proc->param.channel_input;
-  int Zc                           = proc->param.Zc;
-  int Kb                           = proc->param.Kb;
-  short block_length               = proc->param.block_length;
-  short B6                         = proc->param.B6;
-  encoder_implemparams_t impp     = proc->param.impp; */
+  unsigned char test_input[30][10000];
+  unsigned char channel_input[30][10000];
+  int Zc                           = 384;
+  int Kb                           = 22;
+  short block_length               = 8448;
+  short B6                         = 1;
+  encoder_implemparams_t impp;
+  impp.macro_num = 0;
+  impp.n_segments = 1;
+   nrLDPC_encoder(test_input, channel_input, Zc, Kb, block_length,B6, impp);
   char thread_name[100];
   int index;
   struct timespec start, stop;
