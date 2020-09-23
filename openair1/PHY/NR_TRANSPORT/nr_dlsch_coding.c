@@ -315,7 +315,7 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
 extern mlt_thread_LDPCencoding_t *LDPC_proc;
 extern volatile int oai_exit;//extern int oai_exit;
 
-static void *parallel_LDPCencoding(void *parameters){
+void *parallel_LDPCencoding(void *parameters){
   mlt_thread_LDPCencoding_t *proc = (mlt_thread_LDPCencoding_t*) parameters;
   /* unsigned char **test_input       = proc->param.test_input;
   unsigned char **channel_input;   = proc->param.channel_input;

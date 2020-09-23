@@ -76,7 +76,7 @@ int l1_north_init_gNB() {
 
 //////////////////////////////////
 #include <pthread.h>
-static void *parallel_LDPCencoding;
+void *parallel_LDPCencoding(void *parameters);
 mlt_thread_LDPCencoding_t *LDPC_proc;
 //////////////////////////////////
 
