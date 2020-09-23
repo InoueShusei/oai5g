@@ -335,7 +335,8 @@ void *parallel_LDPCencoding(void *parameters){
     if( oai_exit ) break;
     //target process
     //usleep(100);
-    for(index=1 ; index<(proc->param.impp.n_segments/8+1) ; index++){
+    //for(index=1 ; index<(proc->param.impp.n_segments/8+1) ; index++){
+      for(index=2 ; index>0 ; index--){
       clock_gettime(CLOCK_MONOTONIC, &start);
       printf("function start(%d):%d\n", index+1, start.tv_sec*1000*1000*1000+start.tv_nsec);
     proc->param.impp.macro_num = index;
