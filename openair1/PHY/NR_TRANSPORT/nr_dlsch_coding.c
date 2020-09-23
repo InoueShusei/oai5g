@@ -534,6 +534,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
     impp.toutput = toutput;
 
      clock_gettime(CLOCK_MONOTONIC, &start);
+     /////////////////////////////////
      //substituting parameters
      LDPC_proc->param.test_input = dlsch->harq_processes[harq_pid]->c;
      LDPC_proc->param.channel_input = dlsch->harq_processes[harq_pid]->d;
@@ -548,6 +549,7 @@ int nr_dlsch_encoding(PHY_VARS_gNB *gNB,
       nrLDPC_encoder(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,&impp);
     //}
     //join?
+    ////////////////////////////////
     clock_gettime(CLOCK_MONOTONIC, &stop); 
     printf(" LDPC_encoding(1):%d ns\n",  (stop.tv_sec - start.tv_sec)*1000000000 + stop.tv_nsec - start.tv_nsec);
 

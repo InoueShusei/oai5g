@@ -75,6 +75,7 @@ int l1_north_init_gNB() {
 }
 
 //////////////////////////////////
+#include <pthread.h>
 typedef struct{
   unsigned char **test_input;
   unsigned char **channel_input;
